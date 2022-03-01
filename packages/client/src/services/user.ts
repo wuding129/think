@@ -51,7 +51,6 @@ export class UserService implements IUserService {
     if (!isBrowser) return;
     const userStr = getStorage(PERSIST_KEY);
     const user = safeJSONParse(userStr, null);
-    console.log("check", user);
     if (user) {
       this.user = user;
       this.token = user.token;

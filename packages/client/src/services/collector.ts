@@ -16,14 +16,14 @@ export class CollectorService implements ICollectorService {
   /**
    * 知识库
    */
-  wikis = new Map();
+  wikis = [];
   getWikisLoading = false;
   getWikisError = null;
 
   /**
    * 文档
    */
-  documents = new Map();
+  documents = [];
   getDocumentsLoading = false;
   getDocumentsError = null;
 
@@ -53,11 +53,7 @@ export class CollectorService implements ICollectorService {
     this.checkError = null;
 
     try {
-      const res = await this.requestService.post<boolean>(
-        `/collector/toggle`,
-        data
-      );
-      return res;
+      await this.requestService.post<boolean>(`/collector/toggle`, data);
     } catch (e) {
       this.checkError = e;
     } finally {

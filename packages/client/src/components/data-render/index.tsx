@@ -1,14 +1,16 @@
 import React from "react";
-import { Empty, Spin, Typography } from "@douyinfe/semi-ui";
+import { Spin, Typography } from "@douyinfe/semi-ui";
 
 type RenderProps = React.ReactNode | (() => React.ReactNode);
 
 interface IProps {
   loading: boolean;
   error: Error | null;
+  empty?: boolean;
   loadingContent?: RenderProps;
   errorContent?: RenderProps;
   normalContent: RenderProps;
+  emptyContent?: RenderProps;
 }
 
 const { Text } = Typography;
@@ -30,6 +32,8 @@ export const DataRender: React.FC<IProps> = ({
   loadingContent = defaultLoading,
   errorContent = defaultRenderError,
   normalContent,
+  empty,
+  emptyContent,
 }) => {
   if (loading) {
     return runRender(loadingContent);
@@ -37,6 +41,10 @@ export const DataRender: React.FC<IProps> = ({
 
   if (error) {
     return runRender(errorContent, error);
+  }
+
+  if (empty) {
+    return runRender(emptyContent);
   }
 
   return runRender(normalContent);

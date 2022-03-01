@@ -1,20 +1,19 @@
 import type { NextPage } from "next";
 import type { IDocument } from "@think/share";
 import Link from "next/link";
-import React from "react";
+import React, { useCallback } from "react";
 import { Typography, Button, Table, Spin, List } from "@douyinfe/semi-ui";
 import { observer } from "mobx-react";
 import { useService } from "@hooks/useService";
-import { IUserService } from "@think/domains";
+import { ICollectorService, IDocumentService } from "@think/domains";
 import { useToggle } from "hooks/useToggle";
+import { useOnMount } from "hooks/useOnMount";
 import { Seo } from "components/seo";
 import { DataRender } from "components/data-render";
 import { SingleColumnLayout } from "layouts/single-column";
 import { WikiCreator } from "components/wiki/create";
 import { LocaleTime } from "components/locale-time";
 import { DocumentActions } from "components/document/actions";
-import { useStaredWikis } from "data/wiki";
-import { useRecentDocuments } from "data/document";
 import { WikiPinCardPlaceholder, WikiPinCard } from "components/wiki/pin-card";
 import { Empty } from "components/empty";
 import styles from "./index.module.scss";
@@ -31,8 +30,19 @@ const grid = {
   xl: 8,
 };
 
-const RecentDocs = () => {
-  const { data, error, loading, refresh } = useRecentDocuments();
+const RecentDocs = observer(() => {
+  const documentService = useService<IDocumentService>(IDocumentService);
+  const {
+    recentlyViewedDocuments,
+    getRecentlyViewedDocumentsLoading,
+    getRecentlyViewedDocumentsError,
+  } = documentService;
+
+  const getRecentlyViewedDocuments = useCallback(() => {
+    documentService.getRecentlyViewedDocuments();
+  }, []);
+
+  useOnMount(getRecentlyViewedDocuments);
 
   return (
     <>
@@ -40,69 +50,72 @@ const RecentDocs = () => {
         最近访问
       </Title>
       <DataRender
-        loading={loading}
+        loading={getRecentlyViewedDocumentsLoading}
         loadingContent={<Spin />}
-        error={error}
-        normalContent={() =>
-          data && data.length ? (
-            <Table
-              dataSource={data}
-              loading={loading}
-              pagination={false}
-              size="small"
-              style={{ marginTop: 16 }}
-            >
-              <Column
-                title="标题"
-                dataIndex="title"
-                key="title"
-                render={(_, document: IDocument) => {
-                  return (
-                    <Link
-                      href={"/wiki/[wikiId]/document/[docId]"}
-                      as={`/wiki/${document.wikiId}/document/${document.id}`}
-                    >
-                      <a style={{ color: "inherit", textDecoration: "none" }}>
-                        {document.title}
-                      </a>
-                    </Link>
-                  );
-                }}
-              />
-              <Column title="阅读量" dataIndex="views" key="views" />
-              <Column
-                title="更新时间"
-                dataIndex="updatedAt"
-                key="updatedAt"
-                render={(date) => <LocaleTime date={date} timeago />}
-              />
-              <Column
-                title="操作"
-                dataIndex="operate"
-                key="operate"
-                render={(_, document) => (
-                  <DocumentActions
-                    wikiId={document.wikiId}
-                    documentId={document.id}
-                    onStar={refresh}
-                    onDelete={refresh}
-                    showCreateDocument
-                  />
-                )}
-              />
-            </Table>
-          ) : (
-            <Empty message="最近访问的文档会出现在此处" />
-          )
-        }
+        error={getRecentlyViewedDocumentsError}
+        empty={!recentlyViewedDocuments.length}
+        emptyContent={<Empty message="最近访问的文档会出现在此处" />}
+        normalContent={() => (
+          <Table
+            dataSource={recentlyViewedDocuments}
+            loading={getRecentlyViewedDocumentsLoading}
+            pagination={false}
+            size="small"
+            style={{ marginTop: 16 }}
+          >
+            <Column
+              title="标题"
+              dataIndex="title"
+              key="title"
+              render={(_, document: IDocument) => {
+                return (
+                  <Link
+                    href={"/wiki/[wikiId]/document/[docId]"}
+                    as={`/wiki/${document.wikiId}/document/${document.id}`}
+                  >
+                    <a style={{ color: "inherit", textDecoration: "none" }}>
+                      {document.title}
+                    </a>
+                  </Link>
+                );
+              }}
+            />
+            <Column title="阅读量" dataIndex="views" key="views" />
+            <Column
+              title="更新时间"
+              dataIndex="updatedAt"
+              key="updatedAt"
+              render={(date) => <LocaleTime date={date} timeago />}
+            />
+            <Column
+              title="操作"
+              dataIndex="operate"
+              key="operate"
+              render={(_, document) => (
+                <DocumentActions
+                  wikiId={document.wikiId}
+                  documentId={document.id}
+                  onStar={getRecentlyViewedDocuments}
+                  onDelete={getRecentlyViewedDocuments}
+                  showCreateDocument
+                />
+              )}
+            />
+          </Table>
+        )}
       />
     </>
   );
-};
+});
 
-const Page: NextPage = () => {
+const Page: NextPage = observer(() => {
   const [visible, toggleVisible] = useToggle(false);
-  const { data: staredWikis, loading, error, refresh } = useStaredWikis();
+  const collectService = useService<ICollectorService>(ICollectorService);
+  const { wikis, getWikisLoading, getWikisError } = collectService;
+
+  useOnMount(() => {
+    collectService.getCollectWikis();
+  });
 
   return (
     <SingleColumnLayout>
@@ -120,7 +133,7 @@ const Page: NextPage = () => {
           </>
         </div>
         <DataRender
-          loading={loading}
+          loading={getWikisLoading}
           loadingContent={() => (
             <List
               grid={grid}
@@ -132,11 +145,11 @@ const Page: NextPage = () => {
               )}
             />
           )}
-          error={error}
+          error={getWikisError}
           normalContent={() => (
             <List
               grid={grid}
-              dataSource={staredWikis}
+              dataSource={wikis}
               renderItem={(wiki) => (
                 <List.Item>
                   <WikiPinCard wiki={wiki} />
@@ -150,6 +163,6 @@ const Page: NextPage = () => {
       </div>
     </SingleColumnLayout>
   );
-};
+});
 
 export default Page;
