@@ -2,6 +2,7 @@ import { IconEdit } from '@douyinfe/semi-icons';
 import { Button, Layout, Nav, Skeleton, Space, Spin, Tooltip, Typography } from '@douyinfe/semi-ui';
 import { DataRender } from 'components/data-render';
 import { DocumentCollaboration } from 'components/document/collaboration';
+import { DocumentExporter } from 'components/document/export';
 import { DocumentShare } from 'components/document/share';
 import { DocumentStar } from 'components/document/star';
 import { DocumentStyle } from 'components/document/style';
@@ -74,6 +75,7 @@ export const DocumentReader: React.FC<IProps> = ({ documentId }) => {
         </Tooltip>
         <DocumentShare disabled={!readable} key="share" documentId={documentId} />
         <DocumentVersion disabled={!readable} key="version" documentId={documentId} />
+        <DocumentExporter key="exported" document={document} />
         <DocumentStar disabled={!readable} key="star" documentId={documentId} />
         <DocumentStyle />
       </Space>
