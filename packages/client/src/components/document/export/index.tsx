@@ -1,17 +1,17 @@
 import { Button, Dropdown, Modal, Space, Typography } from '@douyinfe/semi-ui';
 import { IDocument } from '@think/domains';
-import { IconJSON, IconMarkdown, IconPDF } from 'components/icons';
+import { IconJSON, IconMarkdown, IconWord } from 'components/icons';
 import download from 'downloadjs';
 import { safeJSONParse, safeJSONStringify } from 'helpers/json';
 import { IsOnMobile } from 'hooks/use-on-mobile';
 import { useToggle } from 'hooks/use-toggle';
 import React, { useCallback, useMemo } from 'react';
 import { useEditor } from 'tiptap/core';
+import { prosemirrorToDocx } from 'tiptap/docx';
 import { CollaborationKit } from 'tiptap/editor';
 import { prosemirrorToMarkdown } from 'tiptap/markdown/prosemirror-to-markdown';
 
 import styles from './index.module.scss';
-import { printEditorContent } from './pdf';
 
 const { Text, Title } = Typography;
 
@@ -47,10 +47,11 @@ export const DocumentExporter: React.FC<IProps> = ({ document, render }) => {
     download(safeJSONStringify(editor.getJSON()), `${document.title}.json`, 'text/plain');
   }, [document, editor]);
 
-  const exportPDF = useCallback(() => {
-    printEditorContent(editor.view);
-    // download(safeJSONStringify(editor.getJSON()), `${document.title}.json`, 'text/plain');
-  }, [editor]);
+  const exportWord = useCallback(() => {
+    prosemirrorToDocx(editor.view, editor.state).then((buffer) => {
+      download(buffer, `${document.title}.docx`);
+    });
+  }, [document, editor]);
 
   const content = useMemo(
     () => (
@@ -86,21 +87,21 @@ export const DocumentExporter: React.FC<IProps> = ({ document, render }) => {
             </footer>
           </div>
 
-          <div className={styles.templateItem} onClick={exportPDF}>
+          <div className={styles.templateItem} onClick={exportWord}>
             <header>
-              <IconPDF style={{ fontSize: 40 }} />
+              <IconWord style={{ fontSize: 40 }} />
             </header>
             <main>
-              <Text>PDF</Text>
+              <Text>Word</Text>
             </main>
             <footer>
-              <Text type="tertiary">.pdf</Text>
+              <Text type="tertiary">.docx</Text>
             </footer>
           </div>
         </Space>
       </div>
     ),
-    [exportMarkdown, exportJSON, exportPDF]
+    [exportMarkdown, exportJSON, exportWord]
   );
 
   const btn = useMemo(

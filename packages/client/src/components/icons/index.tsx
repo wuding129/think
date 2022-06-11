@@ -60,5 +60,6 @@ export * from './IconTableHeaderColumn';
 export * from './IconTableHeaderRow';
 export * from './IconTableOfContents';
 export * from './IconTask';
+export * from './IconWord';
 export * from './IconZoomIn';
 export * from './IconZoomOut';
