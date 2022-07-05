@@ -1,6 +1,7 @@
 import { Toast } from '@douyinfe/semi-ui';
 import axios, { Axios, AxiosRequestConfig, AxiosResponse } from 'axios';
 import { toLogin } from 'data/user';
+import { throttle } from 'helpers/throttle';
 
 type WithCookieAxiosRequestConfig = AxiosRequestConfig & { cookie?: string };
 
@@ -32,6 +33,8 @@ HttpClient.interceptors.request.use(
   }
 );
 
+const debounceLogin = throttle(() => toLogin(), 5000, { leading: true, trailing: false });
+
 HttpClient.interceptors.response.use(
   (data) => {
     if (data.status && +data.status === 200 && data.data.status === 'error') {
@@ -58,7 +61,7 @@ HttpClient.interceptors.response.use(
           break;
         case 401:
           if (isBrowser) {
-            toLogin();
+            debounceLogin();
           }
           break;
         case 429:
